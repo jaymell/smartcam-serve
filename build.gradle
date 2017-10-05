@@ -43,6 +43,7 @@ dependencies {
     compile "org.jetbrains.ktor:ktor-netty:$ktor_version"
     compile "org.jetbrains.ktor:ktor-core:$ktor_version"
     compile "org.jetbrains.ktor:ktor-locations:$ktor_version"
+    compile "org.jetbrains.ktor:ktor-gson:$ktor_version"
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
