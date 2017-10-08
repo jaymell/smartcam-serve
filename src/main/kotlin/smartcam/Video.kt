@@ -15,7 +15,7 @@ data class Video(
 
 fun Video.toDynamoRecord(): HashMap<String, AttributeValue> {
     return hashMapOf(
-       "camera_id" to AttributeValue.builder().s("1").build(),
+       "camera_id" to AttributeValue.builder().s(camera_id).build(),
         "time" to AttributeValue.builder().n(start.toString()).build(),
         "end" to AttributeValue.builder().n(end.toString()).build(),
         "width" to AttributeValue.builder().n(width.toString()).build(),
