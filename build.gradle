@@ -2,6 +2,7 @@
 buildscript {
     ext.kotlin_version = '1.1.4'
     ext.ktor_version = '0.4.0'
+    ext.awssdk_version = '2.0.0-preview-1'
 
     repositories {
         mavenCentral()
@@ -44,6 +45,7 @@ dependencies {
     compile "org.jetbrains.ktor:ktor-core:$ktor_version"
     compile "org.jetbrains.ktor:ktor-locations:$ktor_version"
     compile "org.jetbrains.ktor:ktor-gson:$ktor_version"
+    compile "software.amazon.awssdk:dynamodb:$awssdk_version"
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
