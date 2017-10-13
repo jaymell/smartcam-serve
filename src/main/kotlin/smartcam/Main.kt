@@ -17,6 +17,10 @@ import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
 import java.time.*
 import java.util.concurrent.CompletableFuture
+import kotlin.coroutines.experimental.Continuation
+import kotlin.coroutines.experimental.suspendCoroutine
+import kotlinx.coroutines.experimental.future.await
+
 
 fun Application.main() {
 
@@ -31,6 +35,7 @@ fun Application.main() {
         setPrettyPrinting()
     }
     install(Routing) {
+
         get("/") {
             call.respondText("smartcam")
         }
@@ -44,16 +49,16 @@ fun Application.main() {
             // query dynamodb given that
             // return results
 
-            //  val now = System.currentTimeMillis()
-            val nowUtc = ZonedDateTime(ZoneOffset.UTC)
-            val fiveDaysAgo = nowUtc.minusDays(5)
-            val minTime = fiveDaysAgo.toInstant().toEpochMilli();
-            val cameraId = call.parameters["cameraId"]
-            val eav = hashMapOf(
-               ":val1" to AttributeValue.builder().s(cameraId).build(),
-                ":val2" to AttributeValue.builder().n(minTime).build()
-            )
-            val queryExpression = DynamoDbQueryExpression()
+//  		  val now = System.currentTimeMillis()
+//            val nowUtc = ZonedDateTime(ZoneOffset.UTC)
+//            val fiveDaysAgo = nowUtc.minusDays(5)
+//            val minTime = fiveDaysAgo.toInstant().toEpochMilli();
+//            val cameraId = call.parameters["cameraId"]
+//            val eav = hashMapOf(
+//               ":val1" to AttributeValue.builder().s(cameraId).build(),
+//                ":val2" to AttributeValue.builder().n(minTime).build()
+//            )
+//            val queryExpression = DynamoDbQueryExpression()
         }
         post("/videos") {
             // receive item, validate
@@ -68,8 +73,8 @@ fun Application.main() {
                 .item(videoItem)
                 .build()
             val resp: CompletableFuture<PutItemResponse> = cli.putItem(videoPutRequest)
-            resp.get()
-            call.respondText("done")
+            resp.await()
+            call.respondText(resp.toString())
         }
     }
 }
