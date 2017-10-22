@@ -43,30 +43,29 @@ fun Application.main() {
         get("/cameras") {
             call.respondText("GET /cameras")
         }
-        get("/camera/{cameraId}/videos") {
+        get("/cameras/{cameraId}/videos") {
             // if no params passed, return for list 15 minutes?
             // take start and end as unix ms timestamp for range
             // to get videos from
             // query dynamodb given that
             // return results
 
-//  		    val now = System.currentTimeMillis()
             val nowUtc = ZonedDateTime.now(ZoneOffset.UTC)
-            val fiveDaysAgo = nowUtc.minusDays(50)
+            val fiveDaysAgo = nowUtc.minusDays(5000000)
             val minTime = fiveDaysAgo.toInstant().toEpochMilli();
             val cameraId = call.parameters["cameraId"]
             val eav = hashMapOf(
                ":val1" to AttributeValue.builder().s(cameraId).build(),
                 ":val2" to AttributeValue.builder().n(minTime.toString()).build())
-//            val queryExpression = DynamoDbQueryExpression<Video>()
-//                    .withKeyConditionExpression("camera_id = :val1 and time >= :val2")
-//                    .withExpressionAttributeValues(eav)
+            val ean = hashMapOf(
+                "#t" to "time"
+            )
             val queryRequest: QueryRequest = QueryRequest.builder()
                     .tableName(table)
                     .expressionAttributeValues(eav)
-                    .keyConditionExpression("camera_id = :val1 and time >= :val2")
+                    .expressionAttributeNames(ean)
+                    .keyConditionExpression("camera_id = :val1 and #t >= :val2")
                     .build()
-
             val resp = cli.query(queryRequest)
             resp.await()
             call.respond(resp)
