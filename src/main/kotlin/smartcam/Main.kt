@@ -67,6 +67,8 @@ fun Application.main() {
                     .keyConditionExpression("camera_id = :val1 and #t >= :val2")
                     .build()
             val resp = cli.query(queryRequest)
+                .thenApply { it.items() }
+                .thenApply{ it.map{ videoFromDynamoItem(it) } }
             resp.await()
             call.respond(resp)
         }
