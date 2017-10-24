@@ -21,12 +21,17 @@ import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.experimental.Continuation
 import kotlin.coroutines.experimental.suspendCoroutine
 import kotlinx.coroutines.experimental.future.await
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 
+fun loadConfig(): Config = ConfigFactory.load()
 
 fun Application.main() {
 
-    val table = "smartcam-videos"
-    val region = Region.US_WEST_2
+    val config = loadConfig()
+    val table = config.getString("smartcamServe.table")
+    val region = Region.of(config.getString("smartcamServe.region"))
+    val maxMins = config.getLong("smartcamServe.defaultQueryMaxMins")
     val cli: DynamoDBAsyncClient = DynamoDBAsyncClient.builder()
         .region(region)
         .build()
@@ -44,6 +49,7 @@ fun Application.main() {
             call.respondText("GET /cameras")
         }
         get("/cameras/{cameraId}/videos") {
+
             // if no params passed, return for list 15 minutes?
             // take start and end as unix ms timestamp for range
             // to get videos from
@@ -51,12 +57,11 @@ fun Application.main() {
             // return results
 
             val nowUtc = ZonedDateTime.now(ZoneOffset.UTC)
-            val fiveDaysAgo = nowUtc.minusDays(5000000)
-            val minTime = fiveDaysAgo.toInstant().toEpochMilli();
+            val maxTime = nowUtc.minusMinutes(maxMins).toInstant().toEpochMilli();
             val cameraId = call.parameters["cameraId"]
             val eav = hashMapOf(
                ":val1" to AttributeValue.builder().s(cameraId).build(),
-                ":val2" to AttributeValue.builder().n(minTime.toString()).build())
+                ":val2" to AttributeValue.builder().n(maxTime.toString()).build())
             val ean = hashMapOf(
                 "#t" to "time"
             )
@@ -73,11 +78,13 @@ fun Application.main() {
             call.respond(resp)
         }
         post("/videos") {
+
             // receive item, validate
             // it deserializes properly
             // insert into dynamo
             // if error, return 500
             // else return 200
+
             val video = call.receive<Video>()
             val videoItem = video.toDynamoRecord()
             val videoPutRequest: PutItemRequest = PutItemRequest.builder()
