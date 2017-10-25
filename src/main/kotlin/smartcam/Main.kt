@@ -63,8 +63,7 @@ fun Application.main() {
                ":val1" to AttributeValue.builder().s(cameraId).build(),
                 ":val2" to AttributeValue.builder().n(maxTime.toString()).build())
             val ean = hashMapOf(
-                "#t" to "time"
-            )
+                "#t" to "time")
             val queryRequest: QueryRequest = QueryRequest.builder()
                     .tableName(table)
                     .expressionAttributeValues(eav)
