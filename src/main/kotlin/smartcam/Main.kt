@@ -31,7 +31,7 @@ fun Application.main() {
     val config = loadConfig()
     val table = config.getString("smartcamServe.table")
     val region = Region.of(config.getString("smartcamServe.region"))
-    val maxMins = config.getLong("smartcamServe.defaultQueryMaxMins")
+    val defaultMaxMins = config.getLong("smartcamServe.defaultQueryMaxMins")
     val cli: DynamoDBAsyncClient = DynamoDBAsyncClient.builder()
         .region(region)
         .build()
@@ -50,25 +50,31 @@ fun Application.main() {
         }
         get("/cameras/{cameraId}/videos") {
 
-            // if no params passed, return for list 15 minutes?
+            // if no params passed, return for list 15 minutes
             // take start and end as unix ms timestamp for range
             // to get videos from
             // query dynamodb given that
             // return results
 
-            val nowUtc = ZonedDateTime.now(ZoneOffset.UTC)
-            val maxTime = nowUtc.minusMinutes(maxMins).toInstant().toEpochMilli();
             val cameraId = call.parameters["cameraId"]
+            val fromParam = call.parameters["from"]
+            val toParam = call.parameters["to"]
+
+            val nowUtc = ZonedDateTime.now(ZoneOffset.UTC)
+            val fromTime = fromParam ?: nowUtc.minusMinutes(defaultMaxMins).toInstant().toEpochMilli()
+            val toTime = toParam ?: nowUtc.toInstant().toEpochMilli()
+
             val eav = hashMapOf(
                ":val1" to AttributeValue.builder().s(cameraId).build(),
-                ":val2" to AttributeValue.builder().n(maxTime.toString()).build())
+                ":val2" to AttributeValue.builder().n(fromTime.toString()).build(),
+                ":val3" to AttributeValue.builder().n(toTime.toString()).build())
             val ean = hashMapOf(
                 "#t" to "time")
             val queryRequest: QueryRequest = QueryRequest.builder()
                     .tableName(table)
                     .expressionAttributeValues(eav)
                     .expressionAttributeNames(ean)
-                    .keyConditionExpression("camera_id = :val1 and #t >= :val2")
+                    .keyConditionExpression("camera_id = :val1 and #t BETWEEN :val2 and :val3")
                     .build()
             val resp = cli.query(queryRequest)
                 .thenApply { it.items() }
