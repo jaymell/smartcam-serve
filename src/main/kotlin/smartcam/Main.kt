@@ -17,6 +17,8 @@ import java.util.concurrent.CompletableFuture
 import kotlinx.coroutines.experimental.future.await
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import org.jetbrains.ktor.application.log
+import org.jetbrains.ktor.http.HttpStatusCode
 import smartcam.util.buildDynamoQueryRequest
 
 fun loadConfig(): Config = ConfigFactory.load()
@@ -37,7 +39,6 @@ fun Application.main() {
         setPrettyPrinting()
     }
     install(Routing) {
-
         get("/") {
             call.respondText("smartcam")
         }
@@ -50,11 +51,17 @@ fun Application.main() {
             // if `from` and `to` not passed, return videos
             // with start time between (now - defaultMaxMins) and now;
             val queryRequest = buildDynamoQueryRequest(call, "start", defaultMaxMins, videoTable)
-            val resp = cli.query(queryRequest)
-                .thenApply { it.items() }
-                .thenApply{ it.map{ videoFromDynamoItem(it) } }
-            resp.await()
-            call.respond(resp)
+            try {
+                val resp = cli.query(queryRequest)
+                    .thenApply { it.items() }
+                    .thenApply{ it.map{ videoFromDynamoItem(it) } }
+                resp.await()
+                call.respond(resp)
+            } catch (e: Throwable) {
+                log.error("GET /cameras/{cameraId}/videos: $e")
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+
         }
         get("/cameras/{cameraId}/detections") {
             // return list of object detections between `from`
@@ -62,29 +69,38 @@ fun Application.main() {
             // if `from` and `to` not passed, return detections
             // with start time between (now - defaultMaxMins) and now;
             val queryRequest = buildDynamoQueryRequest(call, "time", defaultMaxMins, detectionTable)
-            val resp = cli.query(queryRequest)
-                .thenApply { it.items() }
-                .thenApply{ it.map{ detectionfromDynamoItem(it) } }
-            resp.await()
-            call.respond(resp)
+            try {
+                val resp = cli.query(queryRequest)
+                    .thenApply { it.items() }
+                    .thenApply{ it.map{ detectionfromDynamoItem(it) } }
+                resp.await()
+                call.respond(resp)
+            }
+            catch (e: Throwable) {
+                log.error("GET /cameras/{cameraId}/detections: $e")
+                call.respond(HttpStatusCode.InternalServerError)
+            }
         }
         post("/videos") {
-
             // receive item, validate
             // it deserializes properly
             // insert into dynamo
             // if error, return 500
             // else return 200
-
             val video = call.receive<Video>()
             val videoItem = video.toDynamoRecord()
             val videoPutRequest: PutItemRequest = PutItemRequest.builder()
                 .tableName(videoTable)
                 .item(videoItem)
                 .build()
-            val resp: CompletableFuture<PutItemResponse> = cli.putItem(videoPutRequest)
-            resp.await()
-            call.respondText(resp.toString())
+            try {
+                val resp: CompletableFuture<PutItemResponse> = cli.putItem(videoPutRequest)
+                resp.await()
+                call.respondText(resp.toString())
+            } catch (e: Throwable) {
+                log.error("GET /videos: $e")
+                call.respond(HttpStatusCode.InternalServerError)
+            }
         }
     }
 }
