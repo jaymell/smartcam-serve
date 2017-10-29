@@ -27,7 +27,7 @@ fun Video.toDynamoRecord(): HashMap<String, AttributeValue> =
 
 fun videoFromDynamoItem(item: Map<String, AttributeValue>): Video =
    Video(item.get("camera_id")!!.s(),
-           item.get("time")!!.n().toFloat(),
+           item.get("start")!!.n().toFloat(),
            item.get("end")!!.n().toFloat(),
            item.get("width")!!.n().toInt(),
            item.get("height")!!.n().toInt(),

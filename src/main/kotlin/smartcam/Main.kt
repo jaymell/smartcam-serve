@@ -29,7 +29,8 @@ fun loadConfig(): Config = ConfigFactory.load()
 fun Application.main() {
 
     val config = loadConfig()
-    val table = config.getString("smartcamServe.table")
+    val videoTable = config.getString("smartcamServe.videoTable")
+    val detectionTable = config.getString("smartcamServe.detectionTable")
     val region = Region.of(config.getString("smartcamServe.region"))
     val defaultMaxMins = config.getLong("smartcamServe.defaultQueryMaxMins")
     val cli: DynamoDBAsyncClient = DynamoDBAsyncClient.builder()
@@ -49,36 +50,62 @@ fun Application.main() {
             call.respondText("GET /cameras")
         }
         get("/cameras/{cameraId}/videos") {
-
-            // if no params passed, return for list 15 minutes
-            // take start and end as unix ms timestamp for range
-            // to get videos from
-            // query dynamodb given that
-            // return results
-
+            // return list of videos between `from`
+            // and `to` parameters (defined in unix epoch millseconds);
+            // if `from` and `to` not passed, return videos
+            // with start time between (now - defaultMaxMins) and now;
             val cameraId = call.parameters["cameraId"]
             val fromParam = call.parameters["from"]
             val toParam = call.parameters["to"]
-
             val nowUtc = ZonedDateTime.now(ZoneOffset.UTC)
             val fromTime = fromParam ?: nowUtc.minusMinutes(defaultMaxMins).toInstant().toEpochMilli()
             val toTime = toParam ?: nowUtc.toInstant().toEpochMilli()
-
             val eav = hashMapOf(
                ":val1" to AttributeValue.builder().s(cameraId).build(),
                 ":val2" to AttributeValue.builder().n(fromTime.toString()).build(),
                 ":val3" to AttributeValue.builder().n(toTime.toString()).build())
             val ean = hashMapOf(
-                "#t" to "time")
+                "#s" to "start")
             val queryRequest: QueryRequest = QueryRequest.builder()
-                    .tableName(table)
-                    .expressionAttributeValues(eav)
-                    .expressionAttributeNames(ean)
-                    .keyConditionExpression("camera_id = :val1 and #t BETWEEN :val2 and :val3")
-                    .build()
+                .tableName(videoTable)
+                .expressionAttributeValues(eav)
+                .expressionAttributeNames(ean)
+                .keyConditionExpression(
+                    "camera_id = :val1 and #s BETWEEN :val2 and :val3")
+                .build()
             val resp = cli.query(queryRequest)
                 .thenApply { it.items() }
                 .thenApply{ it.map{ videoFromDynamoItem(it) } }
+            resp.await()
+            call.respond(resp)
+        }
+        get("/cameras/{cameraId}/detections") {
+            // return list of object detections between `from`
+            // and `to` parameters (defined in unix epoch millseconds);
+            // if `from` and `to` not passed, return detections
+            // with start time between (now - defaultMaxMins) and now;
+            val cameraId = call.parameters["cameraId"]
+            val fromParam = call.parameters["from"]
+            val toParam = call.parameters["to"]
+            val nowUtc = ZonedDateTime.now(ZoneOffset.UTC)
+            val fromTime = fromParam ?: nowUtc.minusMinutes(defaultMaxMins).toInstant().toEpochMilli()
+            val toTime = toParam ?: nowUtc.toInstant().toEpochMilli()
+            val eav = hashMapOf(
+               ":val1" to AttributeValue.builder().s(cameraId).build(),
+                ":val2" to AttributeValue.builder().n(fromTime.toString()).build(),
+                ":val3" to AttributeValue.builder().n(toTime.toString()).build())
+             val ean = hashMapOf(
+                "#t" to "time")
+             val queryRequest: QueryRequest = QueryRequest.builder()
+                .tableName(detectionTable)
+                .expressionAttributeValues(eav)
+                .expressionAttributeNames(ean)
+                .keyConditionExpression(
+                    "camera_id = :val1 and #t BETWEEN :val2 and :val3")
+                .build()
+            val resp = cli.query(queryRequest)
+//                .thenApply { it.items() }
+//                .thenApply{ it.map{ detectionFromDynamoItem(it) } }
             resp.await()
             call.respond(resp)
         }
@@ -93,7 +120,7 @@ fun Application.main() {
             val video = call.receive<Video>()
             val videoItem = video.toDynamoRecord()
             val videoPutRequest: PutItemRequest = PutItemRequest.builder()
-                .tableName(table)
+                .tableName(videoTable)
                 .item(videoItem)
                 .build()
             val resp: CompletableFuture<PutItemResponse> = cli.putItem(videoPutRequest)
