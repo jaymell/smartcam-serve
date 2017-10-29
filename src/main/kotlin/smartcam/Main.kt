@@ -63,8 +63,8 @@ fun Application.main() {
             // with start time between (now - defaultMaxMins) and now;
             val queryRequest = buildDynamoQueryRequest(call, "time", defaultMaxMins, detectionTable)
             val resp = cli.query(queryRequest)
-//                .thenApply { it.items() }
-//                .thenApply{ it.map{ detectionFromDynamoItem(it) } }
+                .thenApply { it.items() }
+                .thenApply{ it.map{ detectionfromDynamoItem(it) } }
             resp.await()
             call.respond(resp)
         }
