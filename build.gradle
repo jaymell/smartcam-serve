@@ -2,7 +2,7 @@
 buildscript {
     ext.kotlin_version = '1.1.51'
     ext.ktor_version = '0.4.0'
-    ext.awssdk_version = '2.0.0-preview-1'
+    ext.awssdk_version = '2.0.0-preview-4'
     ext.kotlinx_version = '0.19.1'
 
     repositories {

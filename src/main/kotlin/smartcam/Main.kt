@@ -11,18 +11,13 @@ import org.jetbrains.ktor.routing.get
 import org.jetbrains.ktor.routing.post
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.*
-import software.amazon.awssdk.services.dynamodb.datamodeling.DynamoDbQueryExpression
-import software.amazon.awssdk.services.dynamodb.model.QueryRequest
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
-import java.time.*
 import java.util.concurrent.CompletableFuture
-import kotlin.coroutines.experimental.Continuation
-import kotlin.coroutines.experimental.suspendCoroutine
 import kotlinx.coroutines.experimental.future.await
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import smartcam.util.buildDynamoQueryRequest
 
 fun loadConfig(): Config = ConfigFactory.load()
 
@@ -54,25 +49,7 @@ fun Application.main() {
             // and `to` parameters (defined in unix epoch millseconds);
             // if `from` and `to` not passed, return videos
             // with start time between (now - defaultMaxMins) and now;
-            val cameraId = call.parameters["cameraId"]
-            val fromParam = call.parameters["from"]
-            val toParam = call.parameters["to"]
-            val nowUtc = ZonedDateTime.now(ZoneOffset.UTC)
-            val fromTime = fromParam ?: nowUtc.minusMinutes(defaultMaxMins).toInstant().toEpochMilli()
-            val toTime = toParam ?: nowUtc.toInstant().toEpochMilli()
-            val eav = hashMapOf(
-               ":val1" to AttributeValue.builder().s(cameraId).build(),
-                ":val2" to AttributeValue.builder().n(fromTime.toString()).build(),
-                ":val3" to AttributeValue.builder().n(toTime.toString()).build())
-            val ean = hashMapOf(
-                "#s" to "start")
-            val queryRequest: QueryRequest = QueryRequest.builder()
-                .tableName(videoTable)
-                .expressionAttributeValues(eav)
-                .expressionAttributeNames(ean)
-                .keyConditionExpression(
-                    "camera_id = :val1 and #s BETWEEN :val2 and :val3")
-                .build()
+            val queryRequest = buildDynamoQueryRequest(call, "start", defaultMaxMins, videoTable)
             val resp = cli.query(queryRequest)
                 .thenApply { it.items() }
                 .thenApply{ it.map{ videoFromDynamoItem(it) } }
@@ -84,25 +61,7 @@ fun Application.main() {
             // and `to` parameters (defined in unix epoch millseconds);
             // if `from` and `to` not passed, return detections
             // with start time between (now - defaultMaxMins) and now;
-            val cameraId = call.parameters["cameraId"]
-            val fromParam = call.parameters["from"]
-            val toParam = call.parameters["to"]
-            val nowUtc = ZonedDateTime.now(ZoneOffset.UTC)
-            val fromTime = fromParam ?: nowUtc.minusMinutes(defaultMaxMins).toInstant().toEpochMilli()
-            val toTime = toParam ?: nowUtc.toInstant().toEpochMilli()
-            val eav = hashMapOf(
-               ":val1" to AttributeValue.builder().s(cameraId).build(),
-                ":val2" to AttributeValue.builder().n(fromTime.toString()).build(),
-                ":val3" to AttributeValue.builder().n(toTime.toString()).build())
-             val ean = hashMapOf(
-                "#t" to "time")
-             val queryRequest: QueryRequest = QueryRequest.builder()
-                .tableName(detectionTable)
-                .expressionAttributeValues(eav)
-                .expressionAttributeNames(ean)
-                .keyConditionExpression(
-                    "camera_id = :val1 and #t BETWEEN :val2 and :val3")
-                .build()
+            val queryRequest = buildDynamoQueryRequest(call, "time", defaultMaxMins, detectionTable)
             val resp = cli.query(queryRequest)
 //                .thenApply { it.items() }
 //                .thenApply{ it.map{ detectionFromDynamoItem(it) } }
