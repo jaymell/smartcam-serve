@@ -10,7 +10,7 @@ data class Detection(
     val detections: List<DetectionObject>
 )
 
-fun detectionfromDynamoItem(item: Map<String, AttributeValue>): Detection =
+fun Detection.fromDynamoItem(item: Map<String, AttributeValue>): Detection =
     Detection(item.get("camera_id")!!.s(),
         item["time"]!!.n().toFloat(),
         item["detections"]!!.l().map { it.s() }
