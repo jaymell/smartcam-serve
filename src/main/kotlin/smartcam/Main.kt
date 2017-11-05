@@ -45,63 +45,8 @@ fun Application.main() {
         get("/cameras") {
             call.respondText("GET /cameras")
         }
-        get("/cameras/{cameraId}/videos") {
-            // return list of videos between `from`
-            // and `to` parameters (defined in unix epoch millseconds);
-            // if `from` and `to` not passed, return videos
-            // with start time between (now - defaultMaxMins) and now;
-            val queryRequest = buildDynamoQueryRequest(call, "start", defaultMaxMins, videoTable)
-            try {
-                val resp = cli.query(queryRequest)
-                    .thenApply { it.items() }
-                    .thenApply{ it.map{ videoFromDynamoItem(it) } }
-                resp.await()
-                call.respond(resp)
-            } catch (e: Throwable) {
-                log.error("GET /cameras/{cameraId}/videos: $e")
-                call.respond(HttpStatusCode.InternalServerError)
-            }
-
-        }
-        get("/cameras/{cameraId}/detections") {
-            // return list of object detections between `from`
-            // and `to` parameters (defined in unix epoch millseconds);
-            // if `from` and `to` not passed, return detections
-            // with start time between (now - defaultMaxMins) and now;
-            val queryRequest = buildDynamoQueryRequest(call, "time", defaultMaxMins, detectionTable)
-            try {
-                val resp = cli.query(queryRequest)
-                    .thenApply { it.items() }
-                    .thenApply{ it.map{ detectionfromDynamoItem(it) } }
-                resp.await()
-                call.respond(resp)
-            }
-            catch (e: Throwable) {
-                log.error("GET /cameras/{cameraId}/detections: $e")
-                call.respond(HttpStatusCode.InternalServerError)
-            }
-        }
-        post("/videos") {
-            // receive item, validate
-            // it deserializes properly
-            // insert into dynamo
-            // if error, return 500
-            // else return 200
-            val video = call.receive<Video>()
-            val videoItem = video.toDynamoRecord()
-            val videoPutRequest: PutItemRequest = PutItemRequest.builder()
-                .tableName(videoTable)
-                .item(videoItem)
-                .build()
-            try {
-                val resp: CompletableFuture<PutItemResponse> = cli.putItem(videoPutRequest)
-                resp.await()
-                call.respondText(resp.toString())
-            } catch (e: Throwable) {
-                log.error("GET /videos: $e")
-                call.respond(HttpStatusCode.InternalServerError)
-            }
-        }
+        videos(cli, defaultMaxMins, videoTable)
+        detections(cli, defaultMaxMins, detectionTable)
     }
 }
 
