@@ -1,17 +1,38 @@
 package smartcam
 
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonCreator
 
-data class Video(
-    val camera_id: String,
-    val start: Float,
-    val end: Float,
-    val width: Int,
-    val height: Int,
-    val bucket: String,
-    val key: String,
-    val region: String
-)
+class Video {
+    var camera_id: String
+    var start: Float
+    var end: Float
+    var width: Int
+    var height: Int
+    var bucket: String
+    var key: String
+    var region: String
+    constructor(
+        @JsonProperty(value = "camera_id", required=true) camera_id: String,
+        @JsonProperty(value = "start", required=true) start: Float,
+        @JsonProperty(value = "end", required=true) end: Float,
+        @JsonProperty(value = "width", required=true) width: Int,
+        @JsonProperty(value = "height", required=true) height: Int,
+        @JsonProperty(value = "bucket", required=true) bucket: String,
+        @JsonProperty(value = "key", required=true) key: String,
+        @JsonProperty(value = "region", required=true) region: String) {
+        this.camera_id = camera_id
+        this.start = start
+        this.end = end
+        this.width = width
+        this.height = height
+        this.bucket = bucket
+        this.key = key
+        this.region = region
+    }
+}
+
 
 fun Video.toDynamoRecord(): HashMap<String, AttributeValue> =
     hashMapOf(

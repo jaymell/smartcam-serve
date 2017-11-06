@@ -15,6 +15,9 @@ import software.amazon.awssdk.services.dynamodb.*
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
 import java.util.concurrent.CompletableFuture
+import com.fasterxml.jackson.module.kotlin.*
+import org.jetbrains.ktor.request.receiveText
+
 
 fun Route.videos(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) {
     get("/cameras/{cameraId}/videos") {
@@ -44,20 +47,22 @@ fun Route.videos(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) 
 
     }
     post("/videos") {
-        val video = call.receive<Video>()
-        println("cmaera: ${video.camera_id}")
-        println("start: ${video.start}")
-        val videoItem = video.toDynamoRecord()
-        val videoPutRequest: PutItemRequest = PutItemRequest.builder()
-                .tableName(table)
-                .item(videoItem)
-                .build()
         try {
+            val mapper = jacksonObjectMapper()
+            val rawVideo = call.receiveText()
+            val video = mapper.readValue<Video>(rawVideo)
+            val videoItem = video.toDynamoRecord()
+            val videoPutRequest: PutItemRequest = PutItemRequest.builder()
+                    .tableName(table)
+                    .item(videoItem)
+                    .build()
             // nullable b/c of mockito:
             val resp: CompletableFuture<PutItemResponse>? = cli.putItem(videoPutRequest)
             resp?.await()
             call.respondText(resp.toString())
-        } catch (e: Throwable) {
+        } catch(e: MissingKotlinParameterException) {
+            call.respond(HttpStatusCode.BadRequest)
+        } catch (e: Exception) {
             // FIXME:
             System.err.println("POST /videos: $e")
             call.respond(HttpStatusCode.InternalServerError)
