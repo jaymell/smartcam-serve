@@ -35,6 +35,7 @@ kotlin {
 }
 
 repositories {
+    jcenter()
     mavenCentral()
     maven { url "https://dl.bintray.com/kotlin/kotlinx" }
     maven { url "https://dl.bintray.com/kotlin/ktor" }
@@ -55,6 +56,9 @@ dependencies {
     compile "ch.qos.logback:logback-classic:1.2.1"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.0"
     testCompile "io.kotlintest:kotlintest:2.0.7"
+    testCompile "org.mockito:mockito-core:2.+"
+    testCompile "com.nhaarman:mockito-kotlin-kt1.1:1.5.0"
+
 }
 
 sourceSets {

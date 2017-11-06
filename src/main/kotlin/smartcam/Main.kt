@@ -5,21 +5,12 @@ import org.jetbrains.ktor.application.install
 import org.jetbrains.ktor.features.DefaultHeaders
 import org.jetbrains.ktor.response.*
 import org.jetbrains.ktor.gson.*
-import org.jetbrains.ktor.request.receive
 import org.jetbrains.ktor.routing.Routing
 import org.jetbrains.ktor.routing.get
-import org.jetbrains.ktor.routing.post
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.*
-import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
-import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
-import java.util.concurrent.CompletableFuture
-import kotlinx.coroutines.experimental.future.await
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.jetbrains.ktor.application.log
-import org.jetbrains.ktor.http.HttpStatusCode
-import smartcam.util.buildDynamoQueryRequest
 
 fun loadConfig(): Config = ConfigFactory.load()
 
