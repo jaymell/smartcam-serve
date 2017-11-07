@@ -46,7 +46,7 @@ class GetRoot : ShouldSpec() {
         }
     }
 }
-/*
+
 class PostVideo : StringSpec() {
     init {
         "good data should get a good response" {
@@ -71,7 +71,7 @@ class PostVideo : StringSpec() {
             withTestApplication(Application::test) {
                with(handleRequest(HttpMethod.Post, "/videos") {
                    addHeader("Content-Type", "application/json")
-                   body = """ {"camer": "1"} """
+                   body = """ {"camera_id": "1", "start": 1509228056000.0} """
                }) {
                    assertEquals(HttpStatusCode.BadRequest, response.status())
                }
@@ -79,4 +79,3 @@ class PostVideo : StringSpec() {
         }
     }
 }
-*/

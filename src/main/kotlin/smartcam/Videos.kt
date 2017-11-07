@@ -48,9 +48,13 @@ fun Route.videos(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) 
     }
     post("/videos") {
         try {
+            println("1")
             val mapper = jacksonObjectMapper()
+            println("2")
             val rawVideo = call.receiveText()
+            println("3")
             val video = mapper.readValue<Video>(rawVideo)
+            println("4")
             val videoItem = video.toDynamoRecord()
             val videoPutRequest: PutItemRequest = PutItemRequest.builder()
                     .tableName(table)
