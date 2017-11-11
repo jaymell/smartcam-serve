@@ -1,23 +1,14 @@
 package smartcam
 
 import kotlinx.coroutines.experimental.future.await
-import org.jetbrains.ktor.application.ApplicationCall
 import org.jetbrains.ktor.http.HttpStatusCode
-import org.jetbrains.ktor.request.receive
-import org.jetbrains.ktor.request.receiveParameters
 import org.jetbrains.ktor.response.respond
-import org.jetbrains.ktor.response.respondText
 import org.jetbrains.ktor.routing.Route
 import org.jetbrains.ktor.routing.get
 import org.jetbrains.ktor.routing.post
 import smartcam.util.buildDynamoQueryRequest
 import software.amazon.awssdk.services.dynamodb.*
-import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
-import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
-import java.util.concurrent.CompletableFuture
-import com.fasterxml.jackson.module.kotlin.*
-import org.jetbrains.ktor.request.receiveText
-import org.jetbrains.ktor.routing.route
+import smartcam.util.putDynamoItem
 
 
 fun Route.videos(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) {
@@ -47,26 +38,7 @@ fun Route.videos(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) 
         }
     }
     post("/videos") {
-        try {
-            val mapper = jacksonObjectMapper()
-            val rawVideo = call.receiveText()
-            val video = mapper.readValue<Video>(rawVideo)
-            val videoItem = video.toDynamoRecord()
-            val videoPutRequest: PutItemRequest = PutItemRequest.builder()
-                    .tableName(table)
-                    .item(videoItem)
-                    .build()
-            // nullable b/c of mockito:
-            val resp: CompletableFuture<PutItemResponse>? = cli.putItem(videoPutRequest)
-            resp?.await()
-            call.respondText(resp.toString())
-        } catch(e: MissingKotlinParameterException) {
-            call.respond(HttpStatusCode.BadRequest)
-        } catch (e: Exception) {
-            // FIXME:
-            System.err.println("POST /videos: $e")
-            call.respond(HttpStatusCode.InternalServerError)
-        }
+        putDynamoItem<Video>(call, cli, table)
     }
 }
 

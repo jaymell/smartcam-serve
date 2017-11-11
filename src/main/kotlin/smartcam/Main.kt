@@ -20,6 +20,7 @@ fun Application.main() {
     val config = loadConfig()
     val videoTable = config.getString("smartcamServe.videoTable")
     val detectionTable = config.getString("smartcamServe.detectionTable")
+    val cameraTable = config.getString("smartcamServe.cameraTable")
     val region = Region.of(config.getString("smartcamServe.region"))
     val defaultMaxMins = config.getLong("smartcamServe.defaultQueryMaxMins")
     val cli: DynamoDBAsyncClient = DynamoDBAsyncClient.builder()
@@ -34,6 +35,6 @@ fun Application.main() {
         get("/") {
             call.respondText("smartcam")
         }
-        cameras(cli, defaultMaxMins, videoTable, detectionTable)
+        cameras(cli, defaultMaxMins, videoTable, detectionTable, cameraTable)
     }
 }
