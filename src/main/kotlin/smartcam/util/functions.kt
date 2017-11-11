@@ -42,7 +42,9 @@ fun buildDynamoQueryRequest(pKey: String,
     return queryRequest
 }
 
-inline suspend fun <reified T: DynamoClass> putDynamoItem(call: ApplicationCall, cli: DynamoDBAsyncClient, table: String) {
+inline suspend fun <reified T: DynamoClass> putDynamoItem(call: ApplicationCall,
+                                                          cli: DynamoDBAsyncClient,
+                                                          table: String) {
     try {
         val mapper = jacksonObjectMapper()
         val rawText = call.receiveText()
