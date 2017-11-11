@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
 import java.util.concurrent.CompletableFuture
 import com.fasterxml.jackson.module.kotlin.*
 import org.jetbrains.ktor.request.receiveText
+import org.jetbrains.ktor.routing.route
 
 
 fun Route.videos(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) {
@@ -44,17 +45,12 @@ fun Route.videos(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) 
             System.err.println("GET /cameras/{cameraId}/videos: $e")
             call.respond(HttpStatusCode.InternalServerError)
         }
-
     }
     post("/videos") {
         try {
-            println("1")
             val mapper = jacksonObjectMapper()
-            println("2")
             val rawVideo = call.receiveText()
-            println("3")
             val video = mapper.readValue<Video>(rawVideo)
-            println("4")
             val videoItem = video.toDynamoRecord()
             val videoPutRequest: PutItemRequest = PutItemRequest.builder()
                     .tableName(table)

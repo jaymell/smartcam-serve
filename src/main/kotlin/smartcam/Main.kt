@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.dynamodb.*
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 
+
 fun loadConfig(): Config = ConfigFactory.load()
 
 fun Application.main() {
@@ -33,11 +34,6 @@ fun Application.main() {
         get("/") {
             call.respondText("smartcam")
         }
-        get("/cameras") {
-            call.respondText("GET /cameras")
-        }
-        videos(cli, defaultMaxMins, videoTable)
-        detections(cli, defaultMaxMins, detectionTable)
+        cameras(cli, defaultMaxMins, videoTable, detectionTable)
     }
 }
-
