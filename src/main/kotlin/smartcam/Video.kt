@@ -7,7 +7,6 @@ interface DynamoClass {
     fun toDynamoRecord(): HashMap<String, AttributeValue>
 }
 
-@JsonInclude(JsonInclude.Include.NON_ABSENT)
 data class Video(
     val camera_id: String,
     val start: Float,

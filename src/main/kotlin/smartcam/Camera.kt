@@ -1,5 +1,6 @@
 package smartcam
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 
 data class Camera(val camera_id: String) : DynamoClass {
@@ -9,3 +10,5 @@ data class Camera(val camera_id: String) : DynamoClass {
         )
 }
 
+fun cameraFromDynamoItem(item: Map<String, AttributeValue>): Camera =
+        Camera(item["camera_id"]!!.s())

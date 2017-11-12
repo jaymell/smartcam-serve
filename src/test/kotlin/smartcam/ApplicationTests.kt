@@ -30,7 +30,7 @@ fun Application.test() {
         setPrettyPrinting()
     }
     install(Routing) {
-        videos(cli, 15, "testTable")
+        cameras(cli, 15, "testTable1", "testTable2", "testTable3")
     }
 }
 
@@ -76,6 +76,21 @@ class PostVideo : StringSpec() {
                    assertEquals(HttpStatusCode.BadRequest, response.status())
                }
            }
+        }
+    }
+}
+
+class PostCamera: StringSpec() {
+    init {
+        "posting nonsense object should fail" {
+            withTestApplication(Application::test) {
+                with(handleRequest(HttpMethod.Post, "/cameras") {
+                    addHeader("Content-Type", "application/json")
+                    body = """ { "test": "thisShouldFail" } """
+                }) {
+                    assertEquals(HttpStatusCode.BadRequest, response.status())
+                }
+            }
         }
     }
 }
