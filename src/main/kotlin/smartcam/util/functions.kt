@@ -18,7 +18,8 @@ import software.amazon.awssdk.services.dynamodb.model.QueryRequest
 import java.time.*
 import java.util.concurrent.CompletableFuture
 
-fun buildDynamoQueryRequest(pKey: String,
+fun buildDynamoQueryRequest(pKeyName: String,
+                            pKeyValue: String?,
                             from: String?,
                             to: String?,
                             sortKey: String,
@@ -29,13 +30,13 @@ fun buildDynamoQueryRequest(pKey: String,
     val fromTime = from ?: nowUtc.minusMinutes(defaultMaxMins).toInstant().toEpochMilli()
     val toTime = to ?: nowUtc.toInstant().toEpochMilli()
     val eav = hashMapOf(
-       ":val1" to AttributeValue.builder().s(pKey).build(),
+       ":val1" to AttributeValue.builder().s(pKeyValue).build(),
         ":val2" to AttributeValue.builder().n(fromTime.toString()).build(),
         ":val3" to AttributeValue.builder().n(toTime.toString()).build())
     val queryRequest: QueryRequest = QueryRequest.builder()
        .tableName(tableName)
        .expressionAttributeValues(eav)
-       .expressionAttributeNames(hashMapOf("#s" to sortKey, "#p" to pKey))
+       .expressionAttributeNames(hashMapOf("#s" to sortKey, "#p" to pKeyName))
        .keyConditionExpression(
            "#p = :val1 and #s BETWEEN :val2 and :val3")
        .build()

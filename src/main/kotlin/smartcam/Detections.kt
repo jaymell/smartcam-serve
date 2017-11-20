@@ -11,14 +11,16 @@ import smartcam.util.buildDynamoQueryRequest
 import software.amazon.awssdk.services.dynamodb.*
 
 fun Route.detections(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) {
-    get("/cameras/{cameraId}/detections") {
+    get("/cameras/{camera_id}/detections") {
         // return list of videos between `from`
         // and `to` parameters (defined in unix epoch millseconds);
         // if `from` and `to` not passed, return videos
         // with start time between (now - defaultMaxMins) and now;
         val from = call.parameters["from"]
         val to = call.parameters["to"]
-        val queryRequest = buildDynamoQueryRequest("cameraId",
+        val pkValue = call.parameters["camera_id"]
+        val queryRequest = buildDynamoQueryRequest("camera_id",
+            pkValue,
             from,
             to,
             "time",
@@ -32,7 +34,7 @@ fun Route.detections(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: Stri
             call.respond(resp)
         } catch (e: Throwable) {
             // FIXME:
-            System.err.println("GET /cameras/{cameraId}/detections: $e")
+            System.err.println("GET /cameras/{camera_id}/detections: $e")
             call.respond(HttpStatusCode.InternalServerError)
         }
     }
