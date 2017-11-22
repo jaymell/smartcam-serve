@@ -11,6 +11,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.*
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import org.jetbrains.ktor.features.CORS
 
 
 fun loadConfig(): Config = ConfigFactory.load()
@@ -30,6 +31,9 @@ fun Application.main() {
     install(DefaultHeaders)
     install(GsonSupport) {
         setPrettyPrinting()
+    }
+    install(CORS) {
+        anyHost()
     }
     install(Routing) {
         get("/") {
