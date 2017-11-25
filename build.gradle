@@ -3,6 +3,7 @@ buildscript {
     ext.kotlin_version = '1.1.51'
     ext.ktor_version = '0.4.0'
     ext.awssdk_version = '2.0.0-preview-4'
+    ext.awssdk_legacy_version = '1.11.235'
     ext.kotlinx_version = '0.19.1'
 
     repositories {
@@ -10,12 +11,23 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // for older version of aws sdk:
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.3.RELEASE"
     }
 }
 
 apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'application'
+// for older version of aws sdk:
+apply plugin: "io.spring.dependency-management"
+
+// for older version of aws sdk:
+dependencyManagement {
+    imports {
+        mavenBom 'com.amazonaws:aws-java-sdk-bom:1.11.228'
+    }
+}
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -55,6 +67,10 @@ dependencies {
     compile "org.slf4j:jul-to-slf4j:1.7.12"
     compile "ch.qos.logback:logback-classic:1.2.1"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.0"
+
+    // for older version of aws sdk:
+    compile 'com.amazonaws:aws-java-sdk-s3'
+
     testCompile "io.kotlintest:kotlintest:2.0.7"
     testCompile "org.mockito:mockito-core:2.+"
     testCompile "com.nhaarman:mockito-kotlin-kt1.1:1.5.0"

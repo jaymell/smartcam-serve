@@ -1,5 +1,9 @@
 package smartcam.util
 
+import com.amazonaws.HttpMethod
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -15,6 +19,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
+import java.net.URL
 import java.time.*
 import java.util.concurrent.CompletableFuture
 
@@ -66,4 +71,17 @@ inline suspend fun <reified T: DynamoClass> putDynamoItem(call: ApplicationCall,
         System.err.println("ERROR putting item: $e")
         call.respond(HttpStatusCode.InternalServerError)
     }
+}
+
+fun getSignedS3Url(s3client: AmazonS3, bucketName: String, objectKey: String): URL {
+    val expiration = java.util.Date()
+    var milliSeconds = expiration.time
+    milliSeconds += (1000 * 60 * 60).toLong() // Add 1 hour.
+    expiration.time = milliSeconds
+
+    val generatePresignedUrlRequest = GeneratePresignedUrlRequest(bucketName, objectKey)
+    generatePresignedUrlRequest.setMethod(HttpMethod.GET)
+    generatePresignedUrlRequest.setExpiration(expiration)
+
+    return s3client.generatePresignedUrl(generatePresignedUrlRequest)
 }

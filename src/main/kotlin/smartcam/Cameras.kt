@@ -1,5 +1,7 @@
 package smartcam
 
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.AmazonS3Client
 import kotlinx.coroutines.experimental.future.await
 import org.jetbrains.ktor.response.respond
 import org.jetbrains.ktor.response.respondText
@@ -13,7 +15,8 @@ import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 import software.amazon.awssdk.services.dynamodb.model.ScanResponse
 import java.util.concurrent.CompletableFuture
 
-fun Route.cameras(cli: DynamoDBAsyncClient,
+fun Route.cameras(dynamoCli: DynamoDBAsyncClient,
+                  s3Cli: AmazonS3,
                   defaultMaxMins: Long,
                   videoTable: String,
                   detectionTable: String,
@@ -22,15 +25,16 @@ fun Route.cameras(cli: DynamoDBAsyncClient,
         val scanRequest: ScanRequest = ScanRequest.builder()
                 .tableName(cameraTable)
                 .build()
-        val resp: CompletableFuture<List<Camera>> = cli.scan(scanRequest)
+        val resp: CompletableFuture<List<Camera>> = dynamoCli.scan(scanRequest)
                 .thenApply{ it.items() }
                 .thenApply{ it.map { cameraFromDynamoItem(it) } }
         resp.await()
         call.respond(resp)
     }
     post("/cameras") {
-        putDynamoItem<Camera>(call, cli, cameraTable)
+        putDynamoItem<Camera>(call, dynamoCli, cameraTable)
     }
-    videos(cli, defaultMaxMins, videoTable)
-    detections(cli, defaultMaxMins, detectionTable)
+    videos(dynamoCli, s3Cli, defaultMaxMins, videoTable)
+    detections(dynamoCli, defaultMaxMins, detectionTable)
+
 }

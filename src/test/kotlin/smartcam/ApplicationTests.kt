@@ -1,5 +1,6 @@
 package smartcam
 
+import com.amazonaws.services.s3.AmazonS3
 import org.jetbrains.ktor.application.*
 import org.jetbrains.ktor.http.*
 import org.jetbrains.ktor.testing.*
@@ -19,9 +20,10 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import software.amazon.awssdk.util.json.JacksonUtils
 
 fun Application.test() {
-    val cli: DynamoDBAsyncClient = mock()
+    val dynamoCli: DynamoDBAsyncClient = mock()
+    val s3Cli: AmazonS3 = mock()
     whenever(
-        cli.putItem(PutItemRequest.builder()
+        dynamoCli.putItem(PutItemRequest.builder()
             .tableName("testTable")
             .build()))
         .thenReturn(CompletableFuture.completedFuture(PutItemResponse.builder().build()))
@@ -30,7 +32,7 @@ fun Application.test() {
         setPrettyPrinting()
     }
     install(Routing) {
-        cameras(cli, 15, "testTable1", "testTable2", "testTable3")
+        cameras(dynamoCli, s3Cli, 15, "testTable1", "testTable2", "testTable3")
     }
 }
 

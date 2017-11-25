@@ -1,5 +1,6 @@
 package smartcam
 
+import com.amazonaws.services.s3.AmazonS3
 import kotlinx.coroutines.experimental.future.await
 import org.jetbrains.ktor.http.HttpStatusCode
 import org.jetbrains.ktor.response.respond
@@ -7,11 +8,11 @@ import org.jetbrains.ktor.routing.Route
 import org.jetbrains.ktor.routing.get
 import org.jetbrains.ktor.routing.post
 import smartcam.util.buildDynamoQueryRequest
+import smartcam.util.getSignedS3Url
 import software.amazon.awssdk.services.dynamodb.*
 import smartcam.util.putDynamoItem
 
-
-fun Route.videos(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) {
+fun Route.videos(dynamoCli: DynamoDBAsyncClient, s3Cli: AmazonS3, defaultMaxMins: Long, table: String) {
     get("/cameras/{camera_id}/videos") {
         // return list of videos between `from`
         // and `to` parameters (defined in unix epoch millseconds);
@@ -28,9 +29,13 @@ fun Route.videos(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) 
             defaultMaxMins,
             table)
         try {
-            val resp = cli.query(queryRequest)
+            val resp = dynamoCli.query(queryRequest)
                 .thenApply { it.items() }
-                .thenApply { it.map { videoFromDynamoItem(it) } }
+                .thenApply { it.map {
+                        val url = getSignedS3Url(s3Cli, it["bucket"]!!.s(), it["key"]!!.s())
+                        videoFromDynamoItem(it, url.toExternalForm())
+                    }
+                }
             resp.await()
             call.respond(resp)
         } catch (e: Throwable) {
@@ -40,7 +45,7 @@ fun Route.videos(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) 
         }
     }
     post("/videos") {
-        putDynamoItem<Video>(call, cli, table)
+        putDynamoItem<Video>(call, dynamoCli, table)
     }
 }
 

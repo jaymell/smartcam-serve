@@ -1,11 +1,7 @@
 package smartcam
 
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
-import com.fasterxml.jackson.annotation.JsonInclude
-
-interface DynamoClass {
-    fun toDynamoRecord(): HashMap<String, AttributeValue>
-}
+import java.net.URL
 
 data class Video(
     val camera_id: String,
@@ -15,8 +11,10 @@ data class Video(
     val height: Int,
     val bucket: String,
     val key: String,
-    val region: String
+    val region: String,
+    var url: String?
 ) : DynamoClass {
+
     override fun toDynamoRecord(): HashMap<String, AttributeValue> =
         hashMapOf(
            "camera_id" to AttributeValue.builder().s(camera_id).build(),
@@ -28,11 +26,10 @@ data class Video(
            "key" to AttributeValue.builder().s(key).build(),
            "region" to AttributeValue.builder().s(region).build()
         )
-
 }
 
 
-fun videoFromDynamoItem(item: Map<String, AttributeValue>): Video =
+fun videoFromDynamoItem(item: Map<String, AttributeValue>, url: String): Video =
    Video(item.get("camera_id")!!.s(),
            item.get("start")!!.n().toFloat(),
            item.get("end")!!.n().toFloat(),
@@ -40,5 +37,6 @@ fun videoFromDynamoItem(item: Map<String, AttributeValue>): Video =
            item.get("height")!!.n().toInt(),
            item.get("bucket")!!.s(),
            item.get("key")!!.s(),
-           item.get("region")!!.s()
+           item.get("region")!!.s(),
+           url
    )
