@@ -5,8 +5,8 @@ import java.net.URL
 
 data class Video(
     val camera_id: String,
-    val start: Float,
-    val end: Float,
+    val start: Double,
+    val end: Double,
     val width: Int,
     val height: Int,
     val bucket: String,
@@ -31,8 +31,8 @@ data class Video(
 
 fun videoFromDynamoItem(item: Map<String, AttributeValue>, url: String): Video =
    Video(item.get("camera_id")!!.s(),
-           item.get("start")!!.n().toFloat(),
-           item.get("end")!!.n().toFloat(),
+           item.get("start")!!.n().toDouble(),
+           item.get("end")!!.n().toDouble(),
            item.get("width")!!.n().toInt(),
            item.get("height")!!.n().toInt(),
            item.get("bucket")!!.s(),

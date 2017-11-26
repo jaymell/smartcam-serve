@@ -7,12 +7,12 @@ typealias DetectionObject = String
 
 data class Detection(
     val camera_id: String,
-    val time: Float,
+    val time: Double,
     val detections: List<DetectionObject>
 )
 
 fun detectionFromDynamoItem(item: Map<String, AttributeValue>): Detection =
     Detection(item["camera_id"]!!.s(),
-        item["time"]!!.n().toFloat(),
+        item["time"]!!.n().toDouble(),
         item["detections"]!!.l().map { it.s() }
     )
