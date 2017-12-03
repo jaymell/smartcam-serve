@@ -44,6 +44,7 @@ fun buildDynamoQueryRequest(pKeyName: String,
        .expressionAttributeNames(hashMapOf("#s" to sortKey, "#p" to pKeyName))
        .keyConditionExpression(
            "#p = :val1 and #s BETWEEN :val2 and :val3")
+       .scanIndexForward(false)
        .build()
     return queryRequest
 }
