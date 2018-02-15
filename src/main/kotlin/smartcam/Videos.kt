@@ -2,7 +2,10 @@ package smartcam
 
 import com.amazonaws.services.s3.AmazonS3
 import kotlinx.coroutines.experimental.future.await
+import org.jetbrains.ktor.cio.toInputStream
+import org.jetbrains.ktor.cio.toReadChannel
 import org.jetbrains.ktor.http.HttpStatusCode
+import org.jetbrains.ktor.request.receiveChannel
 import org.jetbrains.ktor.response.respond
 import org.jetbrains.ktor.routing.Route
 import org.jetbrains.ktor.routing.get
@@ -46,6 +49,14 @@ fun Route.videos(dynamoCli: DynamoDBAsyncClient, s3Cli: AmazonS3, defaultMaxMins
     }
     post("/videos") {
         putDynamoItem<Video>(call, dynamoCli, table)
+    }
+    post("/videodata") {
+        var a = call.receiveChannel()
+        a.toInputStream().use {
+            val total = it.read()
+            println("read $total bytes")
+        }
+        call.respond(HttpStatusCode.OK)
     }
 }
 
