@@ -1,7 +1,6 @@
 package smartcam
 
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
-import java.net.URL
 
 data class Video(
     val camera_id: String,

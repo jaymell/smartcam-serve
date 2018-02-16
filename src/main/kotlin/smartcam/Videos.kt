@@ -1,19 +1,19 @@
 package smartcam
 
 import com.amazonaws.services.s3.AmazonS3
+import io.ktor.application.call
 import kotlinx.coroutines.experimental.future.await
-import org.jetbrains.ktor.cio.toInputStream
-import org.jetbrains.ktor.cio.toReadChannel
-import org.jetbrains.ktor.http.HttpStatusCode
-import org.jetbrains.ktor.request.receiveChannel
-import org.jetbrains.ktor.response.respond
-import org.jetbrains.ktor.routing.Route
-import org.jetbrains.ktor.routing.get
-import org.jetbrains.ktor.routing.post
+import io.ktor.http.HttpStatusCode
+import io.ktor.request.receiveChannel
+import io.ktor.response.respond
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.post
 import smartcam.util.buildDynamoQueryRequest
 import smartcam.util.getSignedS3Url
 import software.amazon.awssdk.services.dynamodb.*
 import smartcam.util.putDynamoItem
+import java.nio.ByteBuffer
 
 fun Route.videos(dynamoCli: DynamoDBAsyncClient, s3Cli: AmazonS3, defaultMaxMins: Long, table: String) {
     get("/cameras/{camera_id}/videos") {
@@ -51,10 +51,18 @@ fun Route.videos(dynamoCli: DynamoDBAsyncClient, s3Cli: AmazonS3, defaultMaxMins
         putDynamoItem<Video>(call, dynamoCli, table)
     }
     post("/videodata") {
-        var a = call.receiveChannel()
-        a.toInputStream().use {
-            val total = it.read()
-            println("read $total bytes")
+        val buf = ByteBuffer.allocate(1000000000)
+        val a = call.receiveChannel()
+        for ( i in a )
+        call.receiveChannel().use {
+            println("here bitch")
+            while(true) {
+                println("going to read")
+                val i = it.read(buf)
+                println("just finished a read")
+                if (i == -1 ) break
+                println("received stuff")
+            }
         }
         call.respond(HttpStatusCode.OK)
     }

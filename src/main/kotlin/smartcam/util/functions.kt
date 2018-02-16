@@ -8,11 +8,11 @@ import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.experimental.future.await
-import org.jetbrains.ktor.application.ApplicationCall
-import org.jetbrains.ktor.http.HttpStatusCode
-import org.jetbrains.ktor.request.receiveText
-import org.jetbrains.ktor.response.respond
-import org.jetbrains.ktor.response.respondText
+import io.ktor.application.ApplicationCall
+import io.ktor.http.HttpStatusCode
+import io.ktor.request.receiveText
+import io.ktor.response.respond
+import io.ktor.response.respondText
 import smartcam.DynamoClass
 import software.amazon.awssdk.services.dynamodb.DynamoDBAsyncClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue

@@ -2,12 +2,13 @@ package smartcam
 
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3Client
+import io.ktor.application.call
 import kotlinx.coroutines.experimental.future.await
-import org.jetbrains.ktor.response.respond
-import org.jetbrains.ktor.response.respondText
-import org.jetbrains.ktor.routing.Route
-import org.jetbrains.ktor.routing.get
-import org.jetbrains.ktor.routing.post
+import io.ktor.response.respond
+import io.ktor.response.respondText
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.post
 import smartcam.util.putDynamoItem
 import software.amazon.awssdk.services.dynamodb.DynamoDBAsyncClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue

@@ -1,18 +1,18 @@
 package smartcam
 
-import org.jetbrains.ktor.application.Application
-import org.jetbrains.ktor.application.install
-import org.jetbrains.ktor.features.DefaultHeaders
-import org.jetbrains.ktor.response.*
-import org.jetbrains.ktor.gson.*
-import org.jetbrains.ktor.routing.Routing
-import org.jetbrains.ktor.routing.get
+import io.ktor.application.Application
+import io.ktor.application.install
+import io.ktor.features.DefaultHeaders
+import io.ktor.response.*
+import io.ktor.gson.*
+import io.ktor.routing.Routing
+import io.ktor.routing.get
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.*
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.experimental.runBlocking
-import org.jetbrains.ktor.features.CORS
+import io.ktor.features.CORS
 import com.amazonaws.services.s3.*
 
 

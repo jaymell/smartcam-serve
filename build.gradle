@@ -1,7 +1,7 @@
 
 buildscript {
-    ext.kotlin_version = '1.1.51'
-    ext.ktor_version = '0.4.0'
+    ext.kotlin_version = '1.2.21'
+    ext.ktor_version = '0.9.1'
     ext.awssdk_version = '2.0.0-preview-4'
     ext.awssdk_legacy_version = '1.11.235'
     ext.kotlinx_version = '0.19.1'
@@ -40,10 +40,6 @@ compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
-
 kotlin {
     experimental {
         coroutines "enable"
@@ -58,14 +54,9 @@ repositories {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_version"
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinx_version"
-    compile "org.jetbrains.ktor:ktor-netty:$ktor_version"
-    compile "org.jetbrains.ktor:ktor-core:$ktor_version"
-    compile "org.jetbrains.ktor:ktor-locations:$ktor_version"
-    compile "org.jetbrains.ktor:ktor-gson:$ktor_version"
-    compile "org.jetbrains.ktor:ktor-test-host:$ktor_version"
+    compile "io.ktor:ktor-server-core:$ktor_version"
     compile "software.amazon.awssdk:dynamodb:$awssdk_version"
     compile "com.typesafe:config:1.3.1"
     compile "org.slf4j:jul-to-slf4j:1.7.12"

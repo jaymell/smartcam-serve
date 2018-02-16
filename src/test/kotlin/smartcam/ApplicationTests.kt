@@ -1,16 +1,16 @@
 package smartcam
 
 import com.amazonaws.services.s3.AmazonS3
-import org.jetbrains.ktor.application.*
-import org.jetbrains.ktor.http.*
-import org.jetbrains.ktor.testing.*
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.testing.*
 import kotlin.test.*
 import io.kotlintest.specs.ShouldSpec
 import io.kotlintest.specs.StringSpec
 import com.nhaarman.mockito_kotlin.*
-import org.jetbrains.ktor.features.DefaultHeaders
-import org.jetbrains.ktor.gson.GsonSupport
-import org.jetbrains.ktor.routing.Routing
+import io.ktor.features.DefaultHeaders
+import io.ktor.gson.GsonSupport
+import io.ktor.routing.Routing
 import software.amazon.awssdk.services.dynamodb.DynamoDBAsyncClient
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
