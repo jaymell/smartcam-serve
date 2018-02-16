@@ -57,6 +57,9 @@ dependencies {
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_version"
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinx_version"
     compile "io.ktor:ktor-server-core:$ktor_version"
+    compile "io.ktor:ktor-server-netty:$ktor_version"
+    compile "io.ktor:ktor-gson:$ktor_version"
+    compile "io.ktor:ktor-server-test-host:$ktor_version"
     compile "software.amazon.awssdk:dynamodb:$awssdk_version"
     compile "com.typesafe:config:1.3.1"
     compile "org.slf4j:jul-to-slf4j:1.7.12"
@@ -87,6 +90,6 @@ shadowJar {
     version = null
 }
 
-mainClassName = 'org.jetbrains.ktor.netty.DevelopmentHost'
+mainClassName = 'io.ktor.server.netty.DevelopmentEngine'
 
 defaultTasks 'run'

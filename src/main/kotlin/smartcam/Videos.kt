@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3
 import io.ktor.application.call
 import kotlinx.coroutines.experimental.future.await
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.cio.internals.DefaultByteBufferPool
 import io.ktor.request.receiveChannel
 import io.ktor.response.respond
 import io.ktor.routing.Route
@@ -51,17 +52,13 @@ fun Route.videos(dynamoCli: DynamoDBAsyncClient, s3Cli: AmazonS3, defaultMaxMins
         putDynamoItem<Video>(call, dynamoCli, table)
     }
     post("/videodata") {
-        val buf = ByteBuffer.allocate(1000000000)
-        val a = call.receiveChannel()
-        for ( i in a )
-        call.receiveChannel().use {
-            println("here bitch")
-            while(true) {
-                println("going to read")
-                val i = it.read(buf)
-                println("just finished a read")
-                if (i == -1 ) break
-                println("received stuff")
+        val buffer = DefaultByteBufferPool.borrow()
+        while(true) {
+            println("reading")
+            val rc = call.receiveChannel().readAvailable(buffer)
+            if ( rc == -1 ) {
+                println("breaking")
+                break
             }
         }
         call.respond(HttpStatusCode.OK)
