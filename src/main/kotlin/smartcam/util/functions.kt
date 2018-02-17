@@ -2,8 +2,10 @@ package smartcam.util
 
 import com.amazonaws.HttpMethod
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
+import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amazonaws.services.s3.model.PutObjectRequest
+import com.amazonaws.services.s3.transfer.TransferManager
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -13,12 +15,16 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.request.receiveText
 import io.ktor.response.respond
 import io.ktor.response.respondText
+import kotlinx.coroutines.experimental.async
 import smartcam.DynamoClass
 import software.amazon.awssdk.services.dynamodb.DynamoDBAsyncClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
 import java.net.URL
 import java.time.*
 import java.util.concurrent.CompletableFuture
@@ -85,4 +91,25 @@ fun getSignedS3Url(s3client: AmazonS3, bucketName: String, objectKey: String): U
     generatePresignedUrlRequest.setExpiration(expiration)
 
     return s3client.generatePresignedUrl(generatePresignedUrlRequest)
+}
+
+suspend fun putS3Object(s3Client: TransferManager, bucket: String, key: String, f: File,
+                userMetadata: MutableMap<String, String>) {
+    val metadata = ObjectMetadata()
+    metadata.contentLength = f.length()
+    userMetadata.forEach { k, v ->
+        metadata.addUserMetadata(k, v)
+    }
+    val r = s3Client.upload(
+            PutObjectRequest(bucket, key, FileInputStream(f), metadata))
+    async { r.waitForCompletion() }.await()
+}
+
+
+fun File.copyInputStreamToFile(inputStream: InputStream) {
+    inputStream.use { input ->
+        this.outputStream().use { fileOut ->
+            input.copyTo(fileOut)
+        }
+    }
 }

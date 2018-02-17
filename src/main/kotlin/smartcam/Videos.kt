@@ -1,22 +1,29 @@
 package smartcam
 
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.transfer.TransferManager
 import io.ktor.application.call
 import kotlinx.coroutines.experimental.future.await
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.cio.internals.DefaultByteBufferPool
-import io.ktor.request.receiveChannel
+import io.ktor.request.receiveStream
 import io.ktor.response.respond
+import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.post
-import smartcam.util.buildDynamoQueryRequest
-import smartcam.util.getSignedS3Url
+import kotlinx.coroutines.experimental.async
+import smartcam.util.*
 import software.amazon.awssdk.services.dynamodb.*
 import smartcam.util.putDynamoItem
-import java.nio.ByteBuffer
+import org.apache.commons.codec.digest.DigestUtils;
+import java.io.FileInputStream
 
-fun Route.videos(dynamoCli: DynamoDBAsyncClient, s3Cli: AmazonS3, defaultMaxMins: Long, table: String) {
+fun Route.videos(dynamoCli: DynamoDBAsyncClient,
+                 s3Cli: AmazonS3,
+                 xm: TransferManager,
+                 defaultMaxMins: Long,
+                 bucket: String,
+                 table: String) {
     get("/cameras/{camera_id}/videos") {
         // return list of videos between `from`
         // and `to` parameters (defined in unix epoch millseconds);
@@ -52,16 +59,22 @@ fun Route.videos(dynamoCli: DynamoDBAsyncClient, s3Cli: AmazonS3, defaultMaxMins
         putDynamoItem<Video>(call, dynamoCli, table)
     }
     post("/videodata") {
-        val buffer = DefaultByteBufferPool.borrow()
-        while(true) {
-            println("reading")
-            val rc = call.receiveChannel().readAvailable(buffer)
-            if ( rc == -1 ) {
-                println("breaking")
-                break
+        try {
+            val f = createTempFile()
+            f.copyInputStreamToFile(call.receiveStream())
+            val key = DigestUtils.md5Hex(FileInputStream(f))
+            println("Uploading to bucket: $bucket, key $key")
+            putS3Object(xm, bucket, key, f, hashMapOf())
+            try {
+                async { f.delete() }.await()
+            } catch(e: Exception) {
+               System.err.println("ERROR: Failed to delete temp file")
             }
+            call.respondText { key }
+        } catch (e: Exception) {
+            System.err.println("POST /videodata failed")
+            call.respond(HttpStatusCode.InternalServerError)
         }
-        call.respond(HttpStatusCode.OK)
     }
 }
 

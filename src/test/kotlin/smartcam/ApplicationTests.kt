@@ -9,17 +9,14 @@ import io.kotlintest.specs.ShouldSpec
 import io.kotlintest.specs.StringSpec
 import com.nhaarman.mockito_kotlin.*
 import io.ktor.features.DefaultHeaders
-import io.ktor.gson.GsonSupport
 import io.ktor.routing.Routing
 import software.amazon.awssdk.services.dynamodb.DynamoDBAsyncClient
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
 import java.util.concurrent.CompletableFuture
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import software.amazon.awssdk.util.json.JacksonUtils
+import io.ktor.features.ContentNegotiation
+import io.ktor.gson.gson
 
-/*
 fun Application.test() {
     val dynamoCli: DynamoDBAsyncClient = mock()
     val s3Cli: AmazonS3 = mock()
@@ -29,8 +26,11 @@ fun Application.test() {
             .build()))
         .thenReturn(CompletableFuture.completedFuture(PutItemResponse.builder().build()))
     install(DefaultHeaders)
-    install(GsonSupport) {
-        setPrettyPrinting()
+    install(ContentNegotiation) {
+        gson {
+            setPrettyPrinting()
+            disableHtmlEscaping()
+        }
     }
     install(Routing) {
         cameras(dynamoCli, s3Cli, 15, "testTable1", "testTable2", "testTable3")
@@ -97,4 +97,3 @@ class PostCamera: StringSpec() {
         }
     }
 }
-*/

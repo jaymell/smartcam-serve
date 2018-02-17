@@ -12,9 +12,9 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.*
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.experimental.runBlocking
 import io.ktor.features.CORS
 import com.amazonaws.services.s3.*
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 
@@ -24,6 +24,7 @@ fun loadConfig(): Config = ConfigFactory.load()
 fun Application.main() {
 
     val config = loadConfig()
+    val videoBucket = config.getString("smartcamServe.videoBucket")
     val videoTable = config.getString("smartcamServe.videoTable")
     val detectionTable = config.getString("smartcamServe.detectionTable")
     val cameraTable = config.getString("smartcamServe.cameraTable")
@@ -35,6 +36,10 @@ fun Application.main() {
     val regionString: String = config.getString("smartcamServe.region")
     val s3Cli = AmazonS3ClientBuilder.standard()
             .withRegion(regionString)
+            .build()
+
+    val xm = TransferManagerBuilder.standard()
+            .withS3Client(s3Cli)
             .build()
 
     install(DefaultHeaders)
@@ -52,6 +57,8 @@ fun Application.main() {
         get("/") {
             call.respondText("smartcam")
         }
-        cameras(dynamoCli, s3Cli, defaultMaxMins, videoTable, detectionTable, cameraTable)
+        cameras(dynamoCli, cameraTable)
+        videos(dynamoCli, s3Cli, xm, defaultMaxMins, videoBucket, videoTable)
+        detections(dynamoCli, defaultMaxMins, detectionTable)
     }
 }
