@@ -21,10 +21,10 @@ fun Application.test() {
     val dynamoCli: DynamoDBAsyncClient = mock()
     val s3Cli: AmazonS3 = mock()
     whenever(
-        dynamoCli.putItem(PutItemRequest.builder()
-            .tableName("testTable")
-            .build()))
-        .thenReturn(CompletableFuture.completedFuture(PutItemResponse.builder().build()))
+            dynamoCli.putItem(PutItemRequest.builder()
+                    .tableName("testTable")
+                    .build()))
+            .thenReturn(CompletableFuture.completedFuture(PutItemResponse.builder().build()))
     install(DefaultHeaders)
     install(ContentNegotiation) {
         gson {
@@ -33,7 +33,9 @@ fun Application.test() {
         }
     }
     install(Routing) {
-        cameras(dynamoCli, s3Cli, 15, "testTable1", "testTable2", "testTable3")
+        cameras(dynamoCli, "testTable1")
+        videos(dynamoCli, s3Cli, mock {}, 1, "testBucket", "testTable")
+        detections(dynamoCli, 1, "testTable")
     }
 }
 
@@ -53,10 +55,10 @@ class GetRoot : ShouldSpec() {
 class PostVideo : StringSpec() {
     init {
         "good data should get a good response" {
-           withTestApplication(Application::test) {
-               with(handleRequest(HttpMethod.Post, "/videos") {
-                   addHeader("Content-Type", "application/json")
-                   body = """
+            withTestApplication(Application::test) {
+                with(handleRequest(HttpMethod.Post, "/videos") {
+                    addHeader("Content-Type", "application/json")
+                    body = """
                        {"camera_id": "1",
                         "start": 1509228056000.0,
                         "end": 1509228056001.0,
@@ -65,25 +67,25 @@ class PostVideo : StringSpec() {
                         "bucket": "testbucket",
                         "key": "testkey",
                         "region": "testregion" }"""
-               }) {
-                   assertEquals(HttpStatusCode.OK, response.status())
-               }
-           }
+                }) {
+                    assertEquals(HttpStatusCode.OK, response.status())
+                }
+            }
         }
         "bad data should return a 400" {
             withTestApplication(Application::test) {
-               with(handleRequest(HttpMethod.Post, "/videos") {
-                   addHeader("Content-Type", "application/json")
-                   body = """ {"camera_id": "1", "start": 1509228056000.0} """
-               }) {
-                   assertEquals(HttpStatusCode.BadRequest, response.status())
-               }
-           }
+                with(handleRequest(HttpMethod.Post, "/videos") {
+                    addHeader("Content-Type", "application/json")
+                    body = """ {"camera_id": "1", "start": 1509228056000.0} """
+                }) {
+                    assertEquals(HttpStatusCode.BadRequest, response.status())
+                }
+            }
         }
     }
 }
 
-class PostCamera: StringSpec() {
+class PostCamera : StringSpec() {
     init {
         "posting nonsense object should fail" {
             withTestApplication(Application::test) {

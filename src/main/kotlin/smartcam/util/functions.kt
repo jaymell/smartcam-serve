@@ -55,7 +55,7 @@ fun buildDynamoQueryRequest(pKeyName: String,
     return queryRequest
 }
 
-inline suspend fun <reified T: DynamoClass> putDynamoItem(call: ApplicationCall,
+suspend inline fun <reified T: DynamoClass> putDynamoItem(call: ApplicationCall,
                                                           cli: DynamoDBAsyncClient,
                                                           table: String) {
     try {
