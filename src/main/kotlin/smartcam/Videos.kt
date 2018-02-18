@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.transfer.TransferManager
 import io.ktor.application.call
 import kotlinx.coroutines.experimental.future.await
 import io.ktor.http.HttpStatusCode
+import io.ktor.request.receiveChannel
 import io.ktor.request.receiveStream
 import io.ktor.response.respond
 import io.ktor.response.respondText
@@ -17,6 +18,7 @@ import software.amazon.awssdk.services.dynamodb.*
 import smartcam.util.putDynamoItem
 import org.apache.commons.codec.digest.DigestUtils;
 import java.io.FileInputStream
+import java.io.RandomAccessFile
 
 fun Route.videos(dynamoCli: DynamoDBAsyncClient,
                  s3Cli: AmazonS3,
@@ -66,7 +68,7 @@ fun Route.videos(dynamoCli: DynamoDBAsyncClient,
             println("Uploading to bucket: $bucket, key $key")
             putS3Object(xm, bucket, key, f, hashMapOf())
             try {
-                async { f.delete() }.await()
+                f.delete()
             } catch(e: Exception) {
                System.err.println("ERROR: Failed to delete temp file")
             }
