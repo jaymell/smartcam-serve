@@ -79,6 +79,9 @@ fun Route.videos(dynamoCli: DynamoDBAsyncClient,
     post("/videodata") {
         try {
             val f = createTempFile()
+            val c = call.receiveStream()
+            c
+
             f.copyInputStreamToFile(call.receiveStream())
             val fileHash = DigestUtils.md5Hex(FileInputStream(f))
             val key = "video/" + fileHash
@@ -96,4 +99,3 @@ fun Route.videos(dynamoCli: DynamoDBAsyncClient,
         }
     }
 }
-

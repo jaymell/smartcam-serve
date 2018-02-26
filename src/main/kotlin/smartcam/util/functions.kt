@@ -2,21 +2,11 @@ package smartcam.util
 
 import com.amazonaws.HttpMethod
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.CopyObjectRequest
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.s3.transfer.TransferManager
-import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.experimental.future.await
-import io.ktor.application.ApplicationCall
-import io.ktor.http.HttpStatusCode
-import io.ktor.request.receiveText
-import io.ktor.response.respond
-import io.ktor.response.respondText
-import kotlinx.coroutines.experimental.async
 import smartcam.DynamoClass
 import software.amazon.awssdk.services.dynamodb.DynamoDBAsyncClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
@@ -94,16 +84,9 @@ suspend fun putS3Object(s3Client: TransferManager, bucket: String, key: String, 
     }
     val r = s3Client.upload(
             PutObjectRequest(bucket, key, FileInputStream(f), metadata))
-    async { r.waitForCompletion() }.await()
+    // blocking:
+    r.waitForCompletion()
 }
-
-/*
-suspend fun moveS3Object(s3Client: AmazonS3, bucketName: String, srcKey: String, destKey: String) {
-    // blocking code, but not yet practical to use aws sd2 v2 client:
-    s3Client.copyObject(CopyObjectRequest(bucketName, srcKey, bucketName, destKey))
-    s3Client.deleteObject(bucketName, srcKey)
-}
-*/
 
 fun File.copyInputStreamToFile(inputStream: InputStream) {
     inputStream.use { input ->
