@@ -8,6 +8,7 @@ import kotlin.test.*
 import io.kotlintest.specs.ShouldSpec
 import io.kotlintest.specs.StringSpec
 import com.nhaarman.mockito_kotlin.*
+import io.ktor.cio.readChannel
 import io.ktor.features.DefaultHeaders
 import io.ktor.routing.Routing
 import software.amazon.awssdk.services.dynamodb.DynamoDBAsyncClient
@@ -16,10 +17,12 @@ import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
 import java.util.concurrent.CompletableFuture
 import io.ktor.features.ContentNegotiation
 import io.ktor.gson.gson
+import io.ktor.request.httpMethod
 
 fun Application.test() {
     val dynamoCli: DynamoDBAsyncClient = mock()
     val s3Cli: AmazonS3 = mock()
+    val xm
     whenever(
             dynamoCli.putItem(PutItemRequest.builder()
                     .tableName("testTable")
@@ -81,6 +84,22 @@ class PostVideo : StringSpec() {
                     assertEquals(HttpStatusCode.BadRequest, response.status())
                 }
             }
+        }
+    }
+}
+
+class PostVideoData : StringSpec() {
+    RequestResponseBuilder()
+    init {
+        "posting file should return 200" {
+            withTestApplication(Application::test) {
+                with(handleRequest(HttpMethod.Post, "/videodata") {
+                    addHeader("Transfer-Encoding", "chunked")
+                })
+            }
+        }
+        "posting nothing should return 400" {
+
         }
     }
 }

@@ -13,7 +13,7 @@ ktor {
 }
 
 smartcamServe {
-    videoBucket = "jaymell-smartcam"
+    videoBucket = "smartcam"
     videoBucket = ${?VIDEO_BUCKET}
     videoTable = "smartcam-videos"
     videoTable = ${?VIDEO_TABLE}

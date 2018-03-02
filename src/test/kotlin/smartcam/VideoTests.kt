@@ -1,13 +1,15 @@
 package smartcam
 
 import com.fasterxml.jackson.module.kotlin.*
+import io.kotlintest.matchers.should
 import io.kotlintest.specs.ShouldSpec
 import io.kotlintest.matchers.shouldThrow
+import io.kotlintest.specs.StringSpec
 
-class TestVideoCreation : ShouldSpec() {
+class TestVideoCreation : StringSpec() {
     init {
         val mapper = jacksonObjectMapper()
-        should("missing string parameter should throw") {
+        "missing string parameter should throw" {
              val rawString = """
                 {"camera_id": "1",
                     "start": 1509228056000.0,
@@ -20,7 +22,7 @@ class TestVideoCreation : ShouldSpec() {
                 mapper.readValue<Video>(rawString)
             }
         }
-//        should("missing float parameter should throw") {
+//        "missing float parameter should throw" {
 //            val rawString = """
 //                {"camera_id": "1",
 //                    "end": 1509228056001.0,
