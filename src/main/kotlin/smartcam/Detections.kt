@@ -3,12 +3,13 @@ package smartcam
 import com.fasterxml.jackson.module.kotlin.*
 import kotlin.reflect.jvm.*
 import kotlinx.coroutines.experimental.future.await
-import org.jetbrains.ktor.http.HttpStatusCode
-import org.jetbrains.ktor.response.respond
-import org.jetbrains.ktor.routing.Route
-import org.jetbrains.ktor.routing.get
+import io.ktor.http.HttpStatusCode
+import io.ktor.response.respond
+import io.ktor.routing.Route
+import io.ktor.routing.get
 import smartcam.util.buildDynamoQueryRequest
 import software.amazon.awssdk.services.dynamodb.*
+import io.ktor.application.call
 
 fun Route.detections(cli: DynamoDBAsyncClient, defaultMaxMins: Long, table: String) {
     get("/cameras/{camera_id}/detections") {

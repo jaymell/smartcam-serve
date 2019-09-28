@@ -1,19 +1,22 @@
 package smartcam
 
-import org.jetbrains.ktor.application.Application
-import org.jetbrains.ktor.application.install
-import org.jetbrains.ktor.features.DefaultHeaders
-import org.jetbrains.ktor.response.*
-import org.jetbrains.ktor.gson.*
-import org.jetbrains.ktor.routing.Routing
-import org.jetbrains.ktor.routing.get
+import io.ktor.application.Application
+import io.ktor.application.install
+import io.ktor.features.DefaultHeaders
+import io.ktor.response.*
+import io.ktor.gson.*
+import io.ktor.routing.Routing
+import io.ktor.routing.get
+import io.ktor.application.call
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.*
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.experimental.runBlocking
-import org.jetbrains.ktor.features.CORS
+import io.ktor.features.CORS
 import com.amazonaws.services.s3.*
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder
+import io.ktor.features.CallLogging
+import io.ktor.features.ContentNegotiation
 
 
 fun loadConfig(): Config = ConfigFactory.load()
@@ -21,6 +24,7 @@ fun loadConfig(): Config = ConfigFactory.load()
 fun Application.main() {
 
     val config = loadConfig()
+    val videoBucket = config.getString("smartcamServe.videoBucket")
     val videoTable = config.getString("smartcamServe.videoTable")
     val detectionTable = config.getString("smartcamServe.detectionTable")
     val cameraTable = config.getString("smartcamServe.cameraTable")
@@ -34,10 +38,17 @@ fun Application.main() {
             .withRegion(regionString)
             .build()
 
+    val xm = TransferManagerBuilder.standard()
+            .withS3Client(s3Cli)
+            .build()
+
     install(DefaultHeaders)
-    install(GsonSupport) {
-        setPrettyPrinting()
-        disableHtmlEscaping()
+    install(CallLogging)
+    install(ContentNegotiation) {
+        gson {
+            setPrettyPrinting()
+            disableHtmlEscaping()
+        }
     }
     install(CORS) {
         anyHost()
@@ -46,6 +57,8 @@ fun Application.main() {
         get("/") {
             call.respondText("smartcam")
         }
-        cameras(dynamoCli, s3Cli, defaultMaxMins, videoTable, detectionTable, cameraTable)
+        cameras(dynamoCli, cameraTable)
+        videos(dynamoCli, s3Cli, xm, defaultMaxMins, videoBucket, videoTable)
+        detections(dynamoCli, defaultMaxMins, detectionTable)
     }
 }

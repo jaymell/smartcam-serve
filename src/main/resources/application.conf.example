@@ -4,6 +4,7 @@ ktor {
         environment = ${?ENV}
         port = 8080
         port = ${?HOST_PORT}
+        watch = [smartcam]
     }
 
     application {
@@ -12,6 +13,8 @@ ktor {
 }
 
 smartcamServe {
+    videoBucket = "smartcam"
+    videoBucket = ${?VIDEO_BUCKET}
     videoTable = "smartcam-videos"
     videoTable = ${?VIDEO_TABLE}
     detectionTable = "smartcam"
